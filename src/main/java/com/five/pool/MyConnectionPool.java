@@ -48,21 +48,16 @@ public class MyConnectionPool<T> {
     @SuppressWarnings("WaitWhileHoldingTwoLocks")
     public synchronized T getConnection() {
         synchronized (lock) {
-            T conn = null;
-            if (!connectionPool.isEmpty()) {
-                conn = connectionPool.remove(connectionPool.size() - 1);
 
-            }
-            else {
-                while (connectionPool.isEmpty()) {
-                    try {
-                        lock.wait();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+            while (connectionPool.isEmpty()) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                conn = connectionPool.remove(connectionPool.size() - 1);
             }
+
+            T conn = connectionPool.remove(connectionPool.size() - 1);
 
             if (poolConfig.checkAlways && !isConnectionValid(conn)) {
                 connBuildTime.remove(conn);
@@ -80,6 +75,12 @@ public class MyConnectionPool<T> {
                 conn = connectionFactory.buildConnection();
                 connBuildTime.put(conn, System.currentTimeMillis());
                 connectionPool.add(conn);
+
+                try {
+                    lock.notify();
+                } catch (IllegalMonitorStateException ignored) {
+
+                }
             }
         }
     }
