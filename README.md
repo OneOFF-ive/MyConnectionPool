@@ -17,4 +17,17 @@ public class PoolConfig {
     //每次从连接池中获取连接或归还连接时是否检测连接可用性
     public boolean checkAlways;
 }
-```
+```  
+连接池的使用方法：  
+```java
+//构造方法
+public MyConnectionPool(PoolConfig poolConfig, ConnectionFactory<T> connectionFactory)
+//获取连接
+public T getConnection()
+//返还连接
+public void releaseConnection(T conn)
+//关闭连接池
+void shutdown()
+//初始化连接池，连接池初始化时自动调用，通常不需要手动调用，只有在关闭连接池后才需要使用
+public void init()
+```  
