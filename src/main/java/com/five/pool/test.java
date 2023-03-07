@@ -13,11 +13,20 @@ public class test {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        var myConnectionPool = new MyConnectionPool<Connection>(new PoolConfig(5, 1), new ConnectionFactory<Connection>() {
+        var myConnectionPool = new MyConnectionPool<Connection>(new PoolConfig(), new ConnectionFactory<Connection>() {
             @Override
             public Connection buildConnection() {
                 try {
                     return DriverManager.getConnection("jdbc:mysql://139.196.48.244:4407/BookLibrary", "wu", "Wzh913000");
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public boolean validateConnection(Connection connection) {
+                try {
+                    return connection.isValid(1);
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -31,6 +40,9 @@ public class test {
         for (var conn : list) {
             myConnectionPool.release(conn);
             System.out.println(conn);
+        }
+        while (true) {
+
         }
     }
 }
