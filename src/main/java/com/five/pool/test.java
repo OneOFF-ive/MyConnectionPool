@@ -38,7 +38,7 @@ public class test {
             list.add(myConnectionPool.getConnection());
         }
         for (var conn : list) {
-            myConnectionPool.release(conn);
+            myConnectionPool.releaseConnection(conn);
             System.out.println(conn);
         }
         while (true) {
