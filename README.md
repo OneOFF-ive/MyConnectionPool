@@ -27,7 +27,7 @@ public T getConnection()
 //返还连接
 public void releaseConnection(T conn)
 //关闭连接池
-void shutdown()
-//初始化连接池，连接池初始化时自动调用，通常不需要手动调用，只有在关闭连接池后才需要使用
+pulic void shutdown()
+//初始化连接池，连接池创建时自动调用，通常不需要手动调用，只有在关闭连接池后才需要使用
 public void init()
 ```  

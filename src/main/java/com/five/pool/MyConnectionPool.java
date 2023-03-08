@@ -1,6 +1,9 @@
 package com.five.pool;
 
+import com.five.pool.thread.MyThreadPool;
+
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 
 public class MyConnectionPool<T> {
@@ -11,14 +14,16 @@ public class MyConnectionPool<T> {
     private final Map<T, Long> connBuildTime;
     private final Object lock;
     private final Timer timer;
+    private final MyThreadPool threadPool;
 
     public MyConnectionPool(PoolConfig poolConfig, ConnectionFactory<T> connectionFactory) {
-        this.connectionPool = new ArrayList<>(poolConfig.maxSize);
+        this.connectionPool = Collections.synchronizedList(new ArrayList<>(poolConfig.maxSize));
         this.poolConfig = poolConfig;
         this.connectionFactory = connectionFactory;
-        connBuildTime = new HashMap<>();
+        connBuildTime = Collections.synchronizedMap(new HashMap<>());
         lock = new Object();
         timer = new Timer();
+        threadPool = new MyThreadPool(poolConfig.maxSize);
         init();
     }
 
@@ -38,10 +43,22 @@ public class MyConnectionPool<T> {
             }
         }, poolConfig.maxIdleTime, poolConfig.maxIdleTime);
 
-        for (int i = 0; i < poolConfig.maxSize; i++) {
-            var conn = connectionFactory.buildConnection();
-            connBuildTime.put(conn, System.currentTimeMillis());
-            connectionPool.add(conn);
+        try {
+            CountDownLatch countDownLatch = new CountDownLatch(poolConfig.maxSize);
+            for (int i = 0; i < poolConfig.maxSize; i++) {
+                threadPool.execute(() -> {
+                    System.out.println(Thread.currentThread().getId() + " start create connection");
+                    var conn = connectionFactory.buildConnection();
+                    connBuildTime.put(conn, System.currentTimeMillis());
+                    connectionPool.add(conn);
+                    countDownLatch.countDown();
+                    System.out.println(Thread.currentThread().getId() + " finish create connection");
+                });
+            }
+            countDownLatch.await();
+            threadPool.shutdown();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -107,7 +124,7 @@ public class MyConnectionPool<T> {
         return false;
     }
 
-    void shutdown() {
+    public void shutdown() {
         timer.cancel();
         connectionPool.clear();
     }
