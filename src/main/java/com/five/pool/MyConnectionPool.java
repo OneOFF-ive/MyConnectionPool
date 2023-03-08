@@ -86,7 +86,7 @@ public class MyConnectionPool<T> {
         }
     }
 
-    public void releaseConnection(T conn) {
+    public boolean releaseConnection(T conn) {
         if (poolConfig.checkAlways && !isConnectionValid(conn)) {
             synchronized (lock) {
                 if (connBuildTime.remove(conn) != null) {
@@ -99,9 +99,11 @@ public class MyConnectionPool<T> {
                     } catch (IllegalMonitorStateException ignored) {
 
                     }
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     public synchronized int available() {

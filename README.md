@@ -30,4 +30,5 @@ public void releaseConnection(T conn)
 pulic void shutdown()
 //初始化连接池，连接池创建时自动调用，通常不需要手动调用，只有在关闭连接池后才需要使用
 public void init()
-```  
+```    
+MyThreadPool 是一个简单的线程池，使用阻塞队列实现
