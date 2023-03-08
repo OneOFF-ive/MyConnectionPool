@@ -47,12 +47,10 @@ public class MyConnectionPool<T> {
             CountDownLatch countDownLatch = new CountDownLatch(poolConfig.maxSize);
             for (int i = 0; i < poolConfig.maxSize; i++) {
                 threadPool.execute(() -> {
-                    System.out.println(Thread.currentThread().getId() + " start create connection");
                     var conn = connectionFactory.buildConnection();
                     connBuildTime.put(conn, System.currentTimeMillis());
                     connectionPool.add(conn);
                     countDownLatch.countDown();
-                    System.out.println(Thread.currentThread().getId() + " finish create connection");
                 });
             }
             countDownLatch.await();
@@ -81,7 +79,7 @@ public class MyConnectionPool<T> {
                 conn = connectionFactory.buildConnection();
                 connBuildTime.put(conn, System.currentTimeMillis());
             }
-
+            System.out.println("pool:rent a conn");
             return conn;
         }
     }
@@ -99,6 +97,7 @@ public class MyConnectionPool<T> {
                     } catch (IllegalMonitorStateException ignored) {
 
                     }
+                    System.out.println("pool:return a conn");
                     return true;
                 }
             }
