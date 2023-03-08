@@ -85,24 +85,24 @@ public class MyConnectionPool<T> {
     }
 
     public boolean releaseConnection(T conn) {
-        if (poolConfig.checkAlways && !isConnectionValid(conn)) {
-            synchronized (lock) {
-                if (connBuildTime.remove(conn) != null) {
+        synchronized (lock) {
+            if (connBuildTime.remove(conn) != null) {
+                if (poolConfig.checkAlways && !isConnectionValid(conn)) {
                     conn = connectionFactory.buildConnection();
                     connBuildTime.put(conn, System.currentTimeMillis());
-                    connectionPool.add(conn);
-
-                    try {
-                        lock.notify();
-                    } catch (IllegalMonitorStateException ignored) {
-
-                    }
-                    System.out.println("pool:return a conn");
-                    return true;
                 }
+                connectionPool.add(conn);
+
+                try {
+                    lock.notify();
+                } catch (IllegalMonitorStateException ignored) {}
+                System.out.println("pool:return a conn");
+
+                return true;
             }
+            return false;
         }
-        return false;
+
     }
 
     public synchronized int available() {
@@ -125,7 +125,7 @@ public class MyConnectionPool<T> {
         return false;
     }
 
-    public void shutdown() {
+    public void close() {
         timer.cancel();
         connectionPool.clear();
     }
